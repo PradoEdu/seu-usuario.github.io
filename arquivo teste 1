@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard TechStore Brasil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a24 100%);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7b61ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .period {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+        }
+        .filters button {
+            padding: 10px 20px;
+            border: 1px solid #2a2a3a;
+            background: #1a1a24;
+            color: #ffffff;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .filters button:hover, .filters button.active {
+            background: linear-gradient(135deg, #00d4ff, #7b61ff);
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .kpi-card {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .kpi-variation {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .up {
+            color: #4ade80;
+        }
+        .down {
+            color: #f87171;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .chart-container {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .chart-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+        .chart-container h3 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+        .table-section {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow-x: auto;
+        }
+        .table-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid #2a2a3a;
+        }
+        th {
+            font-weight: 600;
+            color: #a0a0a0;
+            text-align: left;
+            padding-bottom: 16px;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .kpis {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dashboard TechStore</h1>
+            <div class="period">Período: <span id="periodSpan">18 meses</span></div>
+            <div class="filters">
+                <button data-months="6">6 Meses</button>
+                <button data-months="12">12 Meses</button>
+                <button data-months="18" class="active">18 Meses</button>
+            </div>
+        </header>
+        <section class="kpis">
+            <div class="kpi-card">
+                <div class="kpi-label">Receita Total</div>
+                <div class="kpi-value" id="revenueTotal">R$ 0</div>
+                <div class="kpi-variation up" id="revenueVar">+5.2% ↑</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Lucro Total</div>
+                <div class="kpi-value" id="profitTotal">R$ 0</div>
+                <div class="kpi-variation up" id="profitVar">+3.8% ↑</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Margem (%)</div>
+                <div class="kpi-value" id="marginTotal">0%</div>
+                <div class="kpi-variation up" id="marginVar">+0.45pp ↑</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Ticket Médio</div>
+                <div class="kpi-value" id="ticketAvg">R$ 0</div>
+                <div class="kpi-variation up" id="ticketVar">+2.1% ↑</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Total de Pedidos</div>
+                <div class="kpi-value" id="ordersTotal">0</div>
+                <div class="kpi-variation up" id="ordersVar">+4.7% ↑</div>
+            </div>
+        </section>
+        <section class="charts-grid">
+            <div class="chart-container">
+                <h3>Evolução Mensal Receita vs Lucro</h3>
+                <div class="chart-wrapper">
+                    <canvas id="revenueProfitChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Receita por Categoria</h3>
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Receita por Canal</h3>
+                <div class="chart-wrapper">
+                    <canvas id="channelChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Receita por Região</h3>
+                <div class="chart-wrapper">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Top 10 Produtos</h3>
+                <div class="chart-wrapper">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Margem de Lucro ao Longo do Tempo</h3>
+                <div class="chart-wrapper">
+                    <canvas id="marginChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Forma de Pagamento</h3>
+                <div class="chart-wrapper">
+                    <canvas id="paymentChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Top 5 Vendedores</h3>
+                <div class="chart-wrapper">
+                    <canvas id="topSellersChart"></canvas>
+                </div>
+            </div>
+        </section>
+        <section class="table-section">
+            <h3>Tabela Mensal</h3>
+            <table id="monthlyTable">
+                <thead>
+                    <tr>
+                        <th>Mês</th>
+                        <th>Receita</th>
+                        <th>Custo</th>
+                        <th>Lucro</th>
+                        <th>Margem (%)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+        <footer>Dados fictícios — gerado em 23/04/2026</footer>
+    </div>
+    <script>
+        // Formatação brasileira
+        const formatCurrency = (num) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+        const formatPercent = (num) => num.toFixed(2).replace('.', ',') + '%';
+        const formatNumber = (num) => new Intl.NumberFormat('pt-BR').format(num);
+
+        // Dados base (18 meses)
+        const monthLabels = ['Jan/25', 'Fev/25', 'Mar/25', 'Abr/25', 'Mai/25', 'Jun/25', 'Jul/25', 'Ago/25', 'Set/25', 'Out/25', 'Nov/25', 'Dez/25', 'Jan/26', 'Fev/26', 'Mar/26', 'Abr/26', 'Mai/26', 'Jun/26'];
+
+        const roughRevs = [5200000, 5350000, 5500000, 5650000, 5820000, 6000000, 6180000, 6370000, 6570000, 6780000, 7000000, 7230000, 7480000, 7740000, 8020000, 8310000, 8620000, 8950000];
+        const roughSumRev = roughRevs.reduce((a, b) => a + b, 0);
+        const targetRev = 114593595;
+        const scaleRev = targetRev / roughSumRev;
+        let monthlyRevenues = roughRevs.map(r => Math.round(r * scaleRev));
+
+        const roughOrders = roughRevs.map(r => Math.floor(r / 3600));
+        const roughSumOrders = roughOrders.reduce((a, b) => a + b, 0);
+        const targetOrders = 32345;
+        const scaleOrders = targetOrders / roughSumOrders;
+        let monthlyOrders = roughOrders.map(o => Math.round(o * scaleOrders));
+
+        const monthlyMargins = [18.5, 19.0, 19.2, 19.4, 19.1, 19.3, 19.6, 19.0, 19.5, 19.7, 19.2, 19.8, 19.4, 19.9, 19.6, 20.0, 19.3, 19.18];
+        let monthlyProfits = monthlyRevenues.map((r, i) => Math.round(r * (monthlyMargins[i] / 100)));
+        let monthlyCosts = monthlyRevenues.map((r, i) => r - monthlyProfits[i]);
+
+        // Proporções para gráficos estáticos (escalam com totalRev do período)
+        const categoryProps = [0.41, 0.28, 0.13, 0.11, 0.07];
+        const categoryLabels = ['Notebooks', 'Smartphones', 'Tablets', 'Acessórios', 'Periféricos'];
+
+        const channelProps = [0.52, 0.31, 0.17];
+        const channelLabels = ['Online', 'Loja Física', 'Marketplace'];
+
+        const regionProps = [0.38, 0.16, 0.13, 0.09, 0.07, 0.06, 0.06, 0.05];
+        const regionLabels = ['SP', 'RJ', 'MG', 'BA', 'RS', 'SC', 'PR', 'DF'];
+
+        const topProductProps = [0.152, 0.135, 0.118, 0.102, 0.088, 0.076, 0.066, 0.057, 0.05, 0.043, 0.037, 0.032]; // top12? wait 10
+        topProductProps.length = 10;
+        const topProductLabels = ['MacBook Pro M3', 'iPhone 15 Pro', 'Samsung S24', 'iPad Air 5', 'Mouse Logitech G', 'Teclado Razer', 'SSD Samsung 1TB', 'Headset Sony WH', 'Apple Watch 9', 'Cabo USB-C Pack'];
+
+        const paymentProps = [0.42, 0.28, 0.16, 0.08, 0.06];
+        const paymentLabels = ['Pix', 'Cartão de Crédito', 'Boleto', 'Transferência', 'Dinheiro'];
+
+        const topSellerProps = [0.24, 0.19, 0.15, 0.13, 0.11, 0.09, 0.09];
+        topSellerProps.length = 5;
+        const topSellerLabels = ['João Silva', 'Maria Oliveira', 'Pedro Santos', 'Ana Costa', 'Lucas Pereira'];
+
+        const colors = ['#00d4ff', '#7b61ff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd', '#00f5d4', '#ff9a8b'];
+
+        // Charts
+        let revenueProfitChart, categoryChart, channelChart, regionChart, topProductsChart, marginChart, paymentChart, topSellersChart;
+
+        // Função para atualizar dashboard
+        function updateDashboard(months) {
+            const startIdx = 18 - months;
+            const periodLabels = monthLabels.slice(startIdx);
+            const periodRevs = monthlyRevenues.slice(startIdx);
+            const periodProfs = monthlyProfits.slice(startIdx);
+            const periodCosts = monthlyCosts.slice(startIdx);
+            const periodMargins = monthlyMargins.slice(startIdx);
+            const periodOrders = monthlyOrders.slice(startIdx);
+
+            const totalRev = periodRevs.reduce((a, b) => a + b, 0);
+            const totalProf = periodProfs.reduce((a, b) => a + b, 0);
+            const totalMargin = (totalProf / totalRev * 100).toFixed(2).replace('.', ',') + '%';
+            const totalOrders = periodOrders.reduce((a, b) => a + b, 0);
+            const ticketAvg = totalOrders > 0 ? totalRev / totalOrders : 0;
+
+            // Atualizar KPIs
+            document.getElementById('revenueTotal').textContent = formatCurrency(totalRev);
+            document.getElementById('profitTotal').textContent = formatCurrency(totalProf);
+            document.getElementById('marginTotal').textContent = totalMargin;
+            document.getElementById('ticketAvg').textContent = formatCurrency(ticketAvg);
+            document.getElementById('ordersTotal').textContent = formatNumber(totalOrders);
+
+            // Atualizar período
+            document.getElementById('periodSpan').textContent = months + ' meses';
+
+            // Atualizar gráficos
+            // Evolução Receita vs Lucro
+            revenueProfitChart.data.labels = periodLabels;
+            revenueProfitChart.data.datasets[0].data = periodRevs;
+            revenueProfitChart.data.datasets[1].data = periodProfs;
+            revenueProfitChart.update('active');
+
+            // Categoria
+            const catValues = categoryProps.map(p => totalRev * p);
+            categoryChart.data.labels = categoryLabels;
+            categoryChart.data.datasets[0].data = catValues;
+            categoryChart.update();
+
+            // Canal
+            const chanValues = channelProps.map(p => totalRev * p);
+            channelChart.data.labels = channelLabels;
+            channelChart.data.datasets[0].data = chanValues;
+            channelChart.update();
+
+            // Região
+            const regValues = regionProps.map(p => totalRev * p);
+            regionChart.data.labels = regionLabels;
+            regionChart.data.datasets[0].data = regValues;
+            regionChart.update();
+
+            // Top Produtos
+            const prodValues = topProductProps.map(p => totalRev * p);
+            topProductsChart.data.labels = topProductLabels;
+            topProductsChart.data.datasets[0].data = prodValues;
+            topProductsChart.update();
+
+            // Margem
+            marginChart.data.labels = periodLabels;
+            marginChart.data.datasets[0].data = periodMargins;
+            marginChart.update();
+
+            // Pagamento
+            const payValues = paymentProps.map(p => totalRev * p);
+            paymentChart.data.labels = paymentLabels;
+            paymentChart.data.datasets[0].data = payValues;
+            paymentChart.update();
+
+            // Top Vendedores
+            const sellerValues = topSellerProps.map(p => totalRev * p);
+            topSellersChart.data.labels = topSellerLabels;
+            topSellersChart.data.datasets[0].data = sellerValues;
+            topSellersChart.update();
+
+            // Tabela
+            const tbody = document.querySelector('#monthlyTable tbody');
+            tbody.innerHTML = '';
+            for (let i = 0; i < months; i++) {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = periodLabels[i];
+                row.insertCell(1).textContent = formatCurrency(periodRevs[i]);
+                row.insertCell(2).textContent = formatCurrency(periodCosts[i]);
+                row.insertCell(3).textContent = formatCurrency(periodProfs[i]);
+                row.insertCell(4).textContent = formatPercent(periodMargins[i]);
+            }
+        }
+
+        // Inicializar gráficos
+        function initCharts() {
+            const commonOpts = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#ffffff', font: { size: 12 } }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#a0a0a0' },
+                        grid: { color: '#2a2a3a' }
+                    },
+                    y: {
+                        ticks: { color: '#a0a0a0', callback: function(value) { return formatCurrency(value); } },
+                        grid: { color: '#2a2a3a' }
+                    }
+                },
+                animation: { duration: 1000, easing: 'easeOutQuart' }
+            };
+
+            // Receita vs Lucro (linha dual eixo)
+            const ctx1 = document.getElementById('revenueProfitChart').getContext('2d');
+            revenueProfitChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: 'Receita',
+                            data: monthlyRevenues,
+                            borderColor: '#00d4ff',
+                            backgroundColor: 'rgba(0,212,255,0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Lucro',
+                            data: monthlyProfits,
+                            borderColor: '#4ade80',
+                            backgroundColor: 'rgba(74,222,128,0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOpts,
+                    scales: {
+                        x: { ticks: { color: '#a0a0a0' }, grid: { color: '#2a2a3a' } },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Receita (R$)', color: '#00d4ff' },
+                            ticks: { color: '#a0a0a0', callback: val => formatCurrency(val) },
+                            grid: { color: '#2a2a3a' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Lucro (R$)', color: '#4ade80' },
+                            ticks: { color: '#a0a0a0', callback: val => formatCurrency(val) },
+                            grid: { drawOnChartArea: false }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Donut Categoria
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            const totalRevFull = monthlyRevenues.reduce((a,b)=>a+b,0);
+            const catValuesFull = categoryProps.map(p => totalRevFull * p);
+            categoryChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: catValuesFull,
+                        backgroundColor: colors.slice(0,5),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    ...commonOpts,
+                    plugins: {
+                        ...commonOpts.plugins,
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: ${formatCurrency(ctx.parsed)}`
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Barras Canal
+            const ctx3 = document.getElementById('channelChart').getContext('2d');
+            const chanValuesFull = channelProps.map(p => totalRevFull * p);
+            channelChart = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: channelLabels,
+                    datasets: [{
+                        label: 'Receita',
+                        data: chanValuesFull,
+                        backgroundColor: colors.slice(0,3).map(c => c + 'CC'),
+                        borderColor: colors.slice(0,3),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonOpts,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => formatCurrency(ctx.parsed.y)
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Barras Região
+            const ctx4 = document.getElementById('regionChart').getContext('2d');
+            const regValuesFull = regionProps.map(p => totalRevFull * p);
+            regionChart = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: regionLabels,
+                    datasets: [{
+                        label: 'Receita',
+                        data: regValuesFull,
+                        backgroundColor: colors.slice(0,8).map(c => c + 'CC'),
+                        borderColor: colors.slice(0,8),
+                        borderRadius: 8
+                    }]
+                },
+                options: commonOpts
+            });
+
+            // Barras Horizontais Top Produtos
+            const ctx5 = document.getElementById('topProductsChart').getContext('2d');
+            const prodValuesFull = topProductProps.map(p => totalRevFull * p);
+            topProductsChart = new Chart(ctx5, {
+                type: 'bar',
+                data: {
+                    labels: topProductLabels,
+                    datasets: [{
+                        label: 'Receita',
+                        data: prodValuesFull,
+                        backgroundColor: colors.slice(0,10).map(c => c + 'CC'),
+                        borderColor: colors.slice(0,10),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonOpts,
+                    indexAxis: 'y',
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => formatCurrency(ctx.parsed.x)
+                            }
+                        }
+                    },
+                    scales: {
+                        x: commonOpts.scales.y,
+                        y: {
+                            ticks: { color: '#a0a0a0' },
+                            grid: { color: '#2a2a3a' }
+                        }
+                    }
+                }
+            });
+
+            // Área Margem
+            const ctx6 = document.getElementById('marginChart').getContext('2d');
+            marginChart = new Chart(ctx6, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'Margem (%)',
+                        data: monthlyMargins,
+                        borderColor: '#feca57',
+                        backgroundColor: 'rgba(254,202,87,0.3)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...commonOpts,
+                    scales: {
+                        y: {
+                            ticks: { color: '#a0a0a0', callback: val => val + '%' },
+                            min: 17,
+                            max: 21
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => formatPercent(ctx.parsed.y)
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Donut Pagamento
+            const ctx7 = document.getElementById('paymentChart').getContext('2d');
+            const payValuesFull = paymentProps.map(p => totalRevFull * p);
+            paymentChart = new Chart(ctx7, {
+                type: 'doughnut',
+                data: {
+                    labels: paymentLabels,
+                    datasets: [{
+                        data: payValuesFull,
+                        backgroundColor: colors.slice(0,5),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    ...commonOpts,
+                    cutout: '65%',
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: ${formatCurrency(ctx.parsed)}`
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Barras Top Vendedores
+            const ctx8 = document.getElementById('topSellersChart').getContext('2d');
+            const sellerValuesFull = topSellerProps.map(p => totalRevFull * p);
+            topSellersChart = new Chart(ctx8, {
+                type: 'bar',
+                data: {
+                    labels: topSellerLabels,
+                    datasets: [{
+                        label: 'Receita',
+                        data: sellerValuesFull,
+                        backgroundColor: colors.slice(0,5).map(c => c + 'CC'),
+                        borderColor: colors.slice(0,5),
+                        borderRadius: 8
+                    }]
+                },
+                options: commonOpts
+            });
+        }
+
+        // Event listeners para filtros
+        document.querySelectorAll('.filters button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelector('.filters button.active').classList.remove('active');
+                btn.classList.add('active');
+                const months = parseInt(btn.dataset.months);
+                updateDashboard(months);
+            });
+        });
+
+        // Inicializar
+        initCharts();
+        updateDashboard(18);
+    </script>
+</body>
+</html>
