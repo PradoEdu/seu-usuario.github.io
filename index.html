@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Busca por Tópicos</title>
+  <title>Busca de Notícias por Tópicos</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -16,19 +16,7 @@
       --accent2: #48b2e8;
       --text: #e8eaf6;
       --muted: #8891b2;
-      --success: #4caf7d;
       --radius: 12px;
-
-      --topic-gastronomy: #ff8c42;
-      --topic-education: #48b2e8;
-      --topic-energy: #4caf7d;
-      --topic-cinema: #e040fb;
-      --topic-science: #ffca28;
-      --topic-technology: #29b6f6;
-      --topic-sports: #ef5350;
-      --topic-art: #ff80ab;
-      --topic-history: #a1887f;
-      --topic-health: #66bb6a;
     }
 
     body {
@@ -59,10 +47,7 @@
       margin-bottom: 6px;
     }
 
-    header p {
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
+    header p { color: var(--muted); font-size: 0.95rem; }
 
     /* ── Main layout ── */
     main {
@@ -118,7 +103,6 @@
     .topic-chip:hover {
       border-color: var(--chip-color, var(--accent));
       color: var(--text);
-      background: var(--surface2);
     }
 
     .topic-chip.active {
@@ -126,8 +110,6 @@
       border-color: var(--chip-color, var(--accent));
       color: var(--chip-color, var(--accent));
     }
-
-    .topic-chip .icon { font-size: 1rem; }
 
     /* ── Search input row ── */
     .search-row {
@@ -162,10 +144,7 @@
       transition: border-color 0.18s;
     }
 
-    #search-input:focus {
-      border-color: var(--accent);
-    }
-
+    #search-input:focus { border-color: var(--accent); }
     #search-input::placeholder { color: var(--muted); }
 
     #search-btn {
@@ -185,7 +164,7 @@
     #search-btn:active { transform: translateY(0); }
     #search-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* ── Active topic badge ── */
+    /* ── Active topic bar ── */
     .active-topic-bar {
       display: none;
       align-items: center;
@@ -200,6 +179,7 @@
 
     .active-topic-bar.visible { display: flex; }
     .active-topic-bar strong { color: var(--text); }
+
     .clear-topic {
       margin-left: auto;
       background: none;
@@ -216,7 +196,7 @@
     /* ── Status / spinner ── */
     #status {
       text-align: center;
-      padding: 16px;
+      padding: 20px;
       color: var(--muted);
       font-size: 0.9rem;
       display: none;
@@ -236,7 +216,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Results ── */
+    /* ── Results meta ── */
     #results-meta {
       font-size: 0.82rem;
       color: var(--muted);
@@ -244,6 +224,7 @@
       display: none;
     }
 
+    /* ── Result cards ── */
     .results-grid {
       display: flex;
       flex-direction: column;
@@ -266,30 +247,57 @@
     }
 
     .result-card-body {
-      padding: 20px 22px 14px;
+      padding: 20px 22px 16px;
       flex: 1;
+      display: flex;
+      gap: 16px;
+    }
+
+    .result-thumb {
+      width: 90px;
+      height: 68px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+
+    .result-content { flex: 1; min-width: 0; }
+
+    .result-meta-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
     }
 
     .result-topic-tag {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.7rem;
-      font-weight: 600;
+      gap: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
       padding: 3px 10px;
       border-radius: 50px;
-      margin-bottom: 10px;
       background: color-mix(in srgb, var(--tag-color, var(--accent)) 18%, transparent);
       color: var(--tag-color, var(--accent));
+      flex-shrink: 0;
+    }
+
+    .result-date {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
     }
 
     .result-card h3 {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 8px;
-      line-height: 1.4;
+      line-height: 1.45;
+      margin-bottom: 6px;
     }
 
     .result-card h3 a {
@@ -299,14 +307,6 @@
     }
 
     .result-card h3 a:hover { color: var(--accent2); }
-
-    .result-snippet {
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .result-snippet b { color: var(--text); font-weight: 600; }
 
     /* ── Card footer (source) ── */
     .result-card-footer {
@@ -320,34 +320,24 @@
       color: var(--muted);
     }
 
-    .source-logo {
+    .source-badge {
       display: flex;
       align-items: center;
       gap: 6px;
       font-weight: 600;
       color: var(--text);
+      font-size: 0.8rem;
     }
 
-    .source-logo img {
-      width: 16px;
-      height: 16px;
-      border-radius: 2px;
+    .source-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--tag-color, var(--accent));
+      flex-shrink: 0;
     }
 
-    .source-url {
-      color: var(--accent2);
-      text-decoration: none;
-      font-size: 0.78rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .source-url:hover { text-decoration: underline; }
-
-    .open-link {
+    .read-link {
       margin-left: auto;
       display: flex;
       align-items: center;
@@ -356,10 +346,11 @@
       text-decoration: none;
       font-weight: 600;
       white-space: nowrap;
+      font-size: 0.8rem;
       transition: opacity 0.15s;
     }
 
-    .open-link:hover { opacity: 0.75; }
+    .read-link:hover { opacity: 0.75; }
 
     /* ── Empty / error state ── */
     .empty-state {
@@ -369,8 +360,8 @@
       display: none;
     }
 
-    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
-    .empty-state p { font-size: 0.95rem; }
+    .empty-state .big-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.95rem; line-height: 1.6; }
 
     /* ── Page footer ── */
     footer {
@@ -380,6 +371,7 @@
       text-align: center;
       font-size: 0.8rem;
       color: var(--muted);
+      line-height: 1.6;
     }
 
     footer a { color: var(--accent2); text-decoration: none; }
@@ -390,23 +382,22 @@
       .search-panel { padding: 20px 16px; }
       .search-row { flex-direction: column; }
       #search-btn { width: 100%; }
+      .result-thumb { display: none; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>&#128269; Busca por Tópicos</h1>
-  <p>Pesquise em fontes confiáveis filtradas por categoria</p>
+  <h1>&#128240; Busca de Notícias</h1>
+  <p>Notícias recentes de fontes confiáveis, filtradas por categoria</p>
 </header>
 
 <main>
   <div class="search-panel">
-    <p class="section-label">Selecione um tópico</p>
+    <p class="section-label">Selecione um tópico (opcional)</p>
 
-    <div class="topics-grid" id="topics-grid">
-      <!-- injected by JS -->
-    </div>
+    <div class="topics-grid" id="topics-grid"></div>
 
     <div class="active-topic-bar" id="active-topic-bar">
       <span>Tópico ativo:</span>
@@ -415,13 +406,15 @@
     </div>
 
     <div style="margin-top: 20px;">
-      <p class="section-label">O que você quer saber?</p>
+      <p class="section-label">O que você quer pesquisar?</p>
       <div class="search-row">
         <div class="search-input-wrap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input id="search-input" type="text" placeholder="Ex: receitas italianas, energia solar, Oscar 2024…" autocomplete="off" />
+          <input id="search-input" type="text"
+            placeholder="Ex: energia solar, novo ensino médio, Oscar 2025…"
+            autocomplete="off" />
         </div>
         <button id="search-btn">Buscar</button>
       </div>
@@ -432,30 +425,30 @@
   <div id="results-meta"></div>
   <div class="results-grid" id="results-grid"></div>
   <div class="empty-state" id="empty-state">
-    <div class="icon">&#128269;</div>
-    <p>Nenhum resultado encontrado. Tente outros termos ou mude o tópico.</p>
+    <div class="big-icon">&#128240;</div>
+    <p>Nenhuma notícia encontrada para esse termo.<br>Tente palavras diferentes ou remova o filtro de tópico.</p>
   </div>
 </main>
 
 <footer>
-  Resultados fornecidos pela <a href="https://pt.wikipedia.org" target="_blank" rel="noopener">Wikipédia em Português</a>
-  e fontes especializadas por categoria &mdash;
-  licença <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>
+  Notícias obtidas via <a href="https://news.google.com" target="_blank" rel="noopener">Google Notícias</a>
+  &mdash; os artigos pertencem a seus respectivos veículos de imprensa.<br>
+  A fonte de cada notícia é exibida no rodapé do card.
 </footer>
 
 <script>
-  /* ── Topic definitions ── */
+  /* ── Topics ── */
   const TOPICS = [
-    { id: 'gastronomy',  label: 'Gastronomia',       icon: '🍽️',  color: '#ff8c42', keywords: 'gastronomia culinária receita alimento' },
-    { id: 'education',   label: 'Educação',           icon: '📚',  color: '#48b2e8', keywords: 'educação ensino aprendizagem escola' },
-    { id: 'energy',      label: 'Energia Renovável',  icon: '⚡',  color: '#4caf7d', keywords: 'energia renovável solar eólica sustentável' },
-    { id: 'cinema',      label: 'Cinema',             icon: '🎬',  color: '#e040fb', keywords: 'cinema filme diretor roteiro' },
-    { id: 'science',     label: 'Ciência',            icon: '🔬',  color: '#ffca28', keywords: 'ciência pesquisa descoberta' },
-    { id: 'technology',  label: 'Tecnologia',         icon: '💻',  color: '#29b6f6', keywords: 'tecnologia inovação digital computação' },
-    { id: 'sports',      label: 'Esportes',           icon: '⚽',  color: '#ef5350', keywords: 'esporte futebol atletismo competição' },
-    { id: 'art',         label: 'Arte & Cultura',     icon: '🎨',  color: '#ff80ab', keywords: 'arte cultura música literatura' },
-    { id: 'history',     label: 'História',           icon: '🏛️',  color: '#a1887f', keywords: 'história acontecimento período civilização' },
-    { id: 'health',      label: 'Saúde',              icon: '🩺',  color: '#66bb6a', keywords: 'saúde medicina bem-estar' },
+    { id: 'gastronomy',  label: 'Gastronomia',       icon: '🍽️',  color: '#ff8c42', q: 'gastronomia culinária receita' },
+    { id: 'education',   label: 'Educação',           icon: '📚',  color: '#48b2e8', q: 'educação ensino escola' },
+    { id: 'energy',      label: 'Energia Renovável',  icon: '⚡',  color: '#4caf7d', q: 'energia renovável solar eólica sustentável' },
+    { id: 'cinema',      label: 'Cinema',             icon: '🎬',  color: '#e040fb', q: 'cinema filme estreia' },
+    { id: 'science',     label: 'Ciência',            icon: '🔬',  color: '#ffca28', q: 'ciência pesquisa descoberta' },
+    { id: 'technology',  label: 'Tecnologia',         icon: '💻',  color: '#29b6f6', q: 'tecnologia inteligência artificial inovação' },
+    { id: 'sports',      label: 'Esportes',           icon: '⚽',  color: '#ef5350', q: 'esporte futebol' },
+    { id: 'art',         label: 'Arte & Cultura',     icon: '🎨',  color: '#ff80ab', q: 'arte cultura música' },
+    { id: 'history',     label: 'História',           icon: '🏛️',  color: '#a1887f', q: 'história patrimônio' },
+    { id: 'health',      label: 'Saúde',              icon: '🩺',  color: '#66bb6a', q: 'saúde medicina bem-estar' },
   ];
 
   let activeTopic = null;
@@ -467,20 +460,16 @@
     chip.className = 'topic-chip';
     chip.dataset.id = t.id;
     chip.style.setProperty('--chip-color', t.color);
-    chip.innerHTML = `<span class="icon">${t.icon}</span>${t.label}`;
+    chip.innerHTML = `<span>${t.icon}</span>${t.label}`;
     chip.addEventListener('click', () => toggleTopic(t));
     grid.appendChild(chip);
   });
 
   function toggleTopic(topic) {
-    if (activeTopic && activeTopic.id === topic.id) {
-      clearTopic();
-      return;
-    }
+    if (activeTopic?.id === topic.id) { clearTopic(); return; }
     activeTopic = topic;
     document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
-    const chip = document.querySelector(`.topic-chip[data-id="${topic.id}"]`);
-    if (chip) chip.classList.add('active');
+    document.querySelector(`.topic-chip[data-id="${topic.id}"]`)?.classList.add('active');
     document.getElementById('active-topic-name').textContent = `${topic.icon} ${topic.label}`;
     document.getElementById('active-topic-bar').classList.add('visible');
   }
@@ -494,124 +483,124 @@
   document.getElementById('clear-topic-btn').addEventListener('click', clearTopic);
 
   /* ── Search ── */
-  const input  = document.getElementById('search-input');
-  const btn    = document.getElementById('search-btn');
-  const status = document.getElementById('status');
-  const resMeta = document.getElementById('results-meta');
-  const resGrid = document.getElementById('results-grid');
-  const emptyEl = document.getElementById('empty-state');
+  const input   = document.getElementById('search-input');
+  const btn     = document.getElementById('search-btn');
+  const statusEl = document.getElementById('status');
+  const resMeta  = document.getElementById('results-meta');
+  const resGrid  = document.getElementById('results-grid');
+  const emptyEl  = document.getElementById('empty-state');
 
   btn.addEventListener('click', doSearch);
   input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
   async function doSearch() {
-    const query = input.value.trim();
-    if (!query) { input.focus(); return; }
-
-    const topicKw = activeTopic ? activeTopic.keywords : '';
-    const fullQuery = topicKw ? `${query} ${topicKw}` : query;
+    const userQuery = input.value.trim();
+    if (!userQuery && !activeTopic) { input.focus(); return; }
 
     setLoading(true);
     clearResults();
 
     try {
-      const results = await searchWikipedia(fullQuery, 10);
-      renderResults(results, query);
+      const items = await fetchGoogleNews(userQuery, activeTopic);
+      renderResults(items);
     } catch (err) {
-      showStatus(`Erro ao buscar: ${err.message}`, false);
+      statusEl.style.display = 'block';
+      statusEl.textContent = `Erro: ${err.message}`;
     } finally {
       setLoading(false);
     }
   }
 
-  /* ── Wikipedia API ── */
-  async function searchWikipedia(query, limit = 10) {
-    const base = 'https://pt.wikipedia.org/w/api.php';
-    const params = new URLSearchParams({
-      action:   'query',
-      list:     'search',
-      srsearch: query,
-      srlimit:  limit,
-      srprop:   'snippet|titlesnippet|size',
-      format:   'json',
-      origin:   '*',
-    });
+  /* ── Google News via rss2json ── */
+  async function fetchGoogleNews(userQuery, topic) {
+    const terms = [userQuery, topic?.q].filter(Boolean).join(' ');
+    const gnewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(terms)}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+    const apiUrl   = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gnewsUrl)}&count=15`;
 
-    const res = await fetch(`${base}?${params}`);
+    const res = await fetch(apiUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return data.query.search;
+
+    if (data.status !== 'ok') throw new Error(data.message || 'Falha ao buscar notícias');
+    return data.items || [];
   }
 
   /* ── Render ── */
-  function renderResults(items, originalQuery) {
-    if (!items || items.length === 0) {
-      emptyEl.style.display = 'block';
-      return;
-    }
+  function renderResults(items) {
+    if (!items.length) { emptyEl.style.display = 'block'; return; }
 
-    const topic = activeTopic;
     resMeta.style.display = 'block';
-    resMeta.textContent = `${items.length} resultado(s) encontrado(s)${topic ? ` em "${topic.label}"` : ''} — fonte: Wikipédia PT`;
+    resMeta.textContent = `${items.length} notícia(s) encontrada(s)${activeTopic ? ` em "${activeTopic.label}"` : ''}`;
 
-    items.forEach(item => {
-      const card = buildCard(item, topic);
-      resGrid.appendChild(card);
-    });
+    items.forEach(item => resGrid.appendChild(buildCard(item)));
   }
 
-  function buildCard(item, topic) {
-    const wikiSlug = encodeURIComponent(item.title.replace(/ /g, '_'));
-    const wikiUrl  = `https://pt.wikipedia.org/wiki/${wikiSlug}`;
-    const displayUrl = `pt.wikipedia.org/wiki/${item.title.replace(/ /g, '_')}`;
+  function buildCard(item) {
+    /* Google News title format: "Headline - Source Name" */
+    const parts      = item.title.split(' - ');
+    const sourceName = parts.length > 1 ? parts.pop().trim() : 'Google Notícias';
+    const headline   = parts.join(' - ').trim();
+    const pubDate    = item.pubDate ? new Date(item.pubDate) : null;
+    const tagColor   = activeTopic?.color ?? '#6c63ff';
+    const tagLabel   = activeTopic ? `${activeTopic.icon} ${activeTopic.label}` : '🔍 Geral';
+    const thumb      = item.thumbnail || item.enclosure?.link || null;
 
     const card = document.createElement('article');
     card.className = 'result-card';
-
-    const tagColor = topic ? topic.color : '#6c63ff';
-    const tagLabel = topic ? `${topic.icon} ${topic.label}` : '🔍 Geral';
-
     card.innerHTML = `
       <div class="result-card-body">
-        <span class="result-topic-tag" style="--tag-color:${tagColor}">${tagLabel}</span>
-        <h3><a href="${wikiUrl}" target="_blank" rel="noopener">${item.title}</a></h3>
-        <p class="result-snippet">${item.snippet}…</p>
+        ${thumb ? `<img class="result-thumb" src="${escHtml(thumb)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+        <div class="result-content">
+          <div class="result-meta-top">
+            <span class="result-topic-tag" style="--tag-color:${tagColor}">${tagLabel}</span>
+            ${pubDate ? `<span class="result-date">&#128337; ${relativeDate(pubDate)}</span>` : ''}
+          </div>
+          <h3><a href="${escHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escHtml(headline)}</a></h3>
+        </div>
       </div>
       <div class="result-card-footer">
-        <span class="source-logo">
-          <img src="https://pt.wikipedia.org/static/favicon/wikipedia.ico" alt="Wikipedia" onerror="this.style.display='none'">
-          Wikipédia
+        <span class="source-badge">
+          <span class="source-dot" style="background:${tagColor}"></span>
+          ${escHtml(sourceName)}
         </span>
-        <span style="color:var(--border)">|</span>
-        <a class="source-url" href="${wikiUrl}" target="_blank" rel="noopener" title="${displayUrl}">${displayUrl}</a>
-        <a class="open-link" href="${wikiUrl}" target="_blank" rel="noopener">
-          Abrir &rarr;
+        <a class="read-link" href="${escHtml(item.link)}" target="_blank" rel="noopener noreferrer">
+          Ler notícia &rarr;
         </a>
       </div>
     `;
-
     return card;
   }
 
   /* ── Helpers ── */
+  function relativeDate(date) {
+    const diff = Math.floor((Date.now() - date) / 1000);
+    if (diff < 60)     return 'agora mesmo';
+    if (diff < 3600)   return `há ${Math.floor(diff / 60)} min`;
+    if (diff < 86400)  return `há ${Math.floor(diff / 3600)}h`;
+    if (diff < 172800) return 'ontem';
+    if (diff < 604800) return `há ${Math.floor(diff / 86400)} dias`;
+    return date.toLocaleDateString('pt-BR');
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   function setLoading(on) {
     btn.disabled = on;
     btn.textContent = on ? 'Buscando…' : 'Buscar';
-    status.style.display = on ? 'block' : 'none';
-    status.innerHTML = on
-      ? '<span class="spinner"></span> Consultando fontes confiáveis…'
-      : '';
+    statusEl.style.display = on ? 'block' : 'none';
+    statusEl.innerHTML = on ? '<span class="spinner"></span> Buscando notícias recentes…' : '';
   }
 
   function clearResults() {
     resGrid.innerHTML = '';
     resMeta.style.display = 'none';
     emptyEl.style.display = 'none';
-  }
-
-  function showStatus(msg, loading = false) {
-    status.style.display = 'block';
-    status.innerHTML = loading ? `<span class="spinner"></span>${msg}` : msg;
   }
 </script>
 </body>
