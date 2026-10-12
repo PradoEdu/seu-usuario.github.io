@@ -14,6 +14,7 @@
   --danger:#f2685c; --danger-weak:rgba(242,104,92,.12);
   --info:#6cb6ff; --info-weak:rgba(108,182,255,.10);
   --radius:12px;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -25,7 +26,7 @@ header.top p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .num,td,dd,.big,.kpi b{font-variant-numeric:tabular-nums}
 
 /* barra fixa de resumo */
-.sticky{position:sticky;top:0;z-index:5;background:rgba(11,15,20,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);margin:0 -16px 16px;padding:10px 16px}
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(11,15,20,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);margin:0 -16px 16px;padding:10px 16px}
 .sticky .l1{font-size:15px;font-weight:600}
 .sticky .l1 b{color:var(--accent)}
 .sticky .l2{font-size:12.5px;color:var(--muted);margin-top:2px}
@@ -720,8 +721,15 @@ document.querySelectorAll('.seg[data-state]').forEach(g => {
 document.addEventListener('input', e => { if (e.target.matches('input')) calc(); });
 $('liq').addEventListener('change', calc);
 $('cfSel').addEventListener('change', () => last && render(last));
+let resetArmed = null;
 $('btnReset').addEventListener('click', () => {
-  if (!confirm('Restaurar todos os valores padrão? Os dados digitados serão perdidos.')) return;
+  const b = $('btnReset');
+  if (!resetArmed) {
+    b.textContent = 'Toque de novo para apagar os dados digitados';
+    resetArmed = setTimeout(() => { resetArmed = null; b.textContent = 'Restaurar padrões'; }, 4000);
+    return;
+  }
+  clearTimeout(resetArmed); resetArmed = null; b.textContent = 'Restaurar padrões';
   try { localStorage.removeItem(STORE); } catch(e){}
   state = Object.assign({}, DEF_STATE);
   load(); syncSegs(); calc();
