@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>Calculadora de Margem BESS</title>
+<style>
+:root{
+  --bg:#0b0f14; --surface:#121821; --surface2:#19212c; --border:#263244; --border2:#33415a;
+  --text:#e6edf3; --muted:#8d9bad; --dim:#64748b;
+  --accent:#3fb98a; --accent-weak:rgba(63,185,138,.13);
+  --warn:#e3b341; --warn-weak:rgba(227,179,65,.12);
+  --danger:#f2685c; --danger-weak:rgba(242,104,92,.12);
+  --info:#6cb6ff; --info-weak:rgba(108,182,255,.10);
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 40px}
+header.top{padding:20px 0 12px}
+header.top h1{margin:0;font-size:20px;letter-spacing:-.01em}
+header.top p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.num,td,dd,.big,.kpi b{font-variant-numeric:tabular-nums}
+
+/* barra fixa de resumo */
+.sticky{position:sticky;top:0;z-index:5;background:rgba(11,15,20,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);margin:0 -16px 16px;padding:10px 16px}
+.sticky .l1{font-size:15px;font-weight:600}
+.sticky .l1 b{color:var(--accent)}
+.sticky .l2{font-size:12.5px;color:var(--muted);margin-top:2px}
+.sticky .l2 b{color:var(--text);font-weight:600}
+
+/* cartões */
+section.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+section.card>h2{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:16px}
+h2 .n{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:7px;background:var(--accent-weak);color:var(--accent);font-size:12.5px;font-weight:700}
+h2 .n.alt{background:var(--surface2);color:var(--muted)}
+h3{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 10px;font-weight:600}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+
+/* campos */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end}
+@media(min-width:720px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f>span{font-size:12.5px;color:var(--muted);line-height:1.3}
+.f>span i{font-style:normal;color:var(--dim)}
+.in{position:relative;display:flex;align-items:center}
+.in input{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font:inherit;font-size:16px;padding:10px 64px 10px 11px;font-variant-numeric:tabular-nums;outline:none;transition:border-color .15s}
+.in input:focus{border-color:var(--info)}
+.in input.bad{border-color:var(--danger);background:var(--danger-weak)}
+.in em{position:absolute;right:10px;font-style:normal;font-size:12px;color:var(--muted);pointer-events:none;white-space:nowrap}
+.msg{font-size:11.5px;color:var(--danger);min-height:0}
+.msg:empty{display:none}
+.hide{display:none!important}
+
+/* controles segmentados */
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px;max-width:100%}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13.5px;padding:8px 12px;border-radius:7px;cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--accent-weak);color:var(--accent);font-weight:600;box-shadow:inset 0 0 0 1px rgba(63,185,138,.35)}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:12px}
+.row>label.lbl{font-size:12.5px;color:var(--muted);width:100%}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;cursor:pointer;margin-top:12px}
+.check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--accent);flex:none}
+.check small{display:block;color:var(--muted);font-size:12px}
+
+/* destaque */
+.hero{background:linear-gradient(180deg,var(--accent-weak),transparent);border:1px solid rgba(63,185,138,.3);border-radius:10px;padding:14px;margin-bottom:14px}
+.hero .t{font-size:12.5px;color:var(--muted)}
+.hero .big{font-size:24px;font-weight:700;line-height:1.25;margin-top:2px}
+.hero .big b{color:var(--accent)}
+.hero .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+@media(min-width:720px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;min-width:0}
+.kpi span{display:block;font-size:11.5px;color:var(--muted)}
+.kpi b{display:block;font-size:16px;margin-top:2px;overflow-wrap:anywhere}
+.kpi small{display:block;font-size:11.5px;color:var(--dim);margin-top:1px}
+.kpi.hl{border-color:rgba(63,185,138,.4)}
+.kpi.hl b{color:var(--accent)}
+
+/* alertas */
+.alerts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.alert{border-radius:8px;padding:9px 12px;font-size:13px;border:1px solid}
+.alert.ok{background:var(--accent-weak);border-color:rgba(63,185,138,.35);color:#bfe9d6}
+.alert.warn{background:var(--warn-weak);border-color:rgba(227,179,65,.35);color:#f3dc9d}
+.alert.danger{background:var(--danger-weak);border-color:rgba(242,104,92,.4);color:#ffc4be}
+.alert.info{background:var(--info-weak);border-color:rgba(108,182,255,.3);color:#c6e1ff}
+
+/* cenários */
+.mode{font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-top:12px}
+.mode b{color:var(--accent)}
+.mode code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--text)}
+.scens{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media(min-width:760px){.scens{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.scen{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:0}
+.scen.rec{border-color:var(--accent);box-shadow:0 0 0 1px rgba(63,185,138,.25)}
+.scen .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.scen .hd strong{font-size:13.5px}
+.badge{font-size:11px;font-weight:700;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.scen .f{margin-bottom:6px}
+.scen .eq{font-size:12px;color:var(--muted);margin-bottom:8px}
+.scen .price{border-top:1px solid var(--border);padding-top:10px}
+.scen .price small{font-size:12px;color:var(--muted)}
+.scen .price .big{font-size:22px;font-weight:700}
+.scen.rec .price .big{color:var(--accent)}
+dl.kv{margin:8px 0 0;display:flex;flex-direction:column;gap:4px}
+dl.kv div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0;text-align:right}
+dl.kv .sep{border-top:1px dashed var(--border);margin:3px 0}
+.pos{color:var(--accent)} .neg{color:var(--danger)}
+
+/* tabelas */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+thead th{background:var(--surface2);color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+th.rec,td.rec{background:var(--accent-weak)}
+th.rec{color:var(--accent)}
+tr.pb td{background:rgba(63,185,138,.07)}
+
+details{border:1px solid var(--border);border-radius:9px;margin-top:12px;background:var(--surface)}
+details>summary{cursor:pointer;padding:11px 14px;font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400}
+details[open]>summary::after{content:"−"}
+details>.body{padding:0 14px 14px}
+select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font:inherit;font-size:14px;border-radius:8px;padding:8px 10px;margin-bottom:10px;max-width:100%}
+
+/* auditoria */
+.audit{display:flex;flex-direction:column;gap:2px}
+.audit h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.audit h4:first-child{margin-top:4px}
+.al{padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.al .t{color:var(--muted);font-size:12px}
+.al code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}
+.al code b{color:var(--accent);font-weight:600}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.btn{appearance:none;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:18px 0 8px;border-top:1px solid var(--border);margin-top:20px}
+footer b{color:var(--warn);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Calculadora de Margem · BESS C&amp;I</h1>
+  <p>Armazenamento para deslocamento de ponta, com ou sem solar. Sem fornecedor: tudo sai dos dados digitados.</p>
+</header>
+
+<div class="sticky" id="sticky">
+  <div class="l1" id="stk1">—</div>
+  <div class="l2" id="stk2">—</div>
+</div>
+
+<div class="actions">
+  <button class="btn" type="button" id="btnReset">Restaurar padrões</button>
+</div>
+
+<!-- ========== DADOS DO CLIENTE ========== -->
+<section class="card">
+  <h2><span class="n alt">A</span>Dados do cliente</h2>
+  <div class="grid">
+    <label class="f"><span>Energia a deslocar na ponta</span><div class="in"><input id="eDia" inputmode="decimal" data-def="300" data-pos><em>kWh/dia</em></div><div class="msg"></div></label>
+    <label class="f"><span>Duração da ponta</span><div class="in"><input id="hPonta" inputmode="decimal" data-def="3" data-pos data-max="24"><em>h/dia</em></div><div class="msg"></div></label>
+    <label class="f"><span>Dias considerados no mês</span><div class="in"><input id="dias" inputmode="decimal" data-def="22" data-pos data-max="31"><em>dias</em></div><div class="msg"></div></label>
+    <label class="f"><span>Tarifa de ponta <i>(TE+TUSD)</i></span><div class="in"><input id="tPonta" inputmode="decimal" data-def="2,50" data-min="0"><em>R$/kWh</em></div><div class="msg"></div></label>
+    <label class="f"><span>Tarifa fora-ponta <i>(TE+TUSD)</i></span><div class="in"><input id="tFora" inputmode="decimal" data-def="0,55" data-min="0"><em>R$/kWh</em></div><div class="msg"></div></label>
+    <label class="f"><span>Reajuste tarifário anual</span><div class="in"><input id="reaj" inputmode="decimal" data-def="0" data-min="-50" data-max="100"><em>% a.a.</em></div><div class="msg"></div></label>
+  </div>
+</section>
+
+<!-- ========== PREMISSAS ========== -->
+<section class="card">
+  <h2><span class="n alt">B</span>Premissas técnicas</h2>
+  <div class="grid">
+    <label class="f"><span>Eficiência round-trip</span><div class="in"><input id="efic" inputmode="decimal" data-def="91,3" data-pos data-max="100"><em>%</em></div><div class="msg"></div></label>
+    <label class="f"><span>Profundidade de descarga (DoD)</span><div class="in"><input id="dod" inputmode="decimal" data-def="100" data-pos data-max="100"><em>%</em></div><div class="msg"></div></label>
+    <label class="f"><span>Degradação anual</span><div class="in"><input id="degr" inputmode="decimal" data-def="3" data-min="0" data-lt="100"><em>% a.a.</em></div><div class="msg"></div></label>
+    <label class="f"><span>Fator de potência</span><div class="in"><input id="fp" inputmode="decimal" data-def="0,92" data-pos data-max="1"><em>—</em></div><div class="msg"></div></label>
+  </div>
+</section>
+
+<!-- ========== 1. DIMENSIONAMENTO ========== -->
+<section class="card">
+  <h2><span class="n">1</span>Dimensionamento</h2>
+  <div class="hero">
+    <div class="t">Resultado</div>
+    <div class="big" id="heroTxt">—</div>
+    <div class="sub" id="heroSub"></div>
+  </div>
+  <div class="grid">
+    <label class="f"><span>Folga de potência</span><div class="in"><input id="folga" inputmode="decimal" data-def="10" data-min="0" data-max="200"><em>%</em></div><div class="msg"></div></label>
+    <label class="f"><span>Ano de projeto <i>(degradação)</i></span><div class="in"><input id="anoProj" inputmode="numeric" data-def="1" data-min="0" data-max="15" data-int><em>ano</em></div><div class="msg"></div></label>
+  </div>
+  <p class="note">O ano de projeto define até quando a bateria precisa entregar a energia diária. Com 1 (padrão), vale a fórmula pedida: capacidade = energia ÷ (DoD × (1 − degradação)). Valores maiores dimensionam para o fim de vida.</p>
+
+  <h3>Equipamento escolhido <span style="text-transform:none;letter-spacing:0;color:var(--dim)">(opcional)</span></h3>
+  <div class="grid">
+    <label class="f"><span>Capacidade instalada</span><div class="in"><input id="capInst" inputmode="decimal" data-def="" data-opt data-pos placeholder="—"><em>kWh</em></div><div class="msg"></div></label>
+    <label class="f"><span>Potência instalada</span><div class="in"><input id="potInst" inputmode="decimal" data-def="" data-opt data-pos placeholder="—"><em>kW</em></div><div class="msg"></div></label>
+  </div>
+  <div class="kpis" id="utilKpis"></div>
+  <div class="alerts" id="dimAlerts"></div>
+</section>
+
+<!-- ========== 2. CUSTOS ========== -->
+<section class="card">
+  <h2><span class="n">2</span>Custos</h2>
+  <div class="grid">
+    <label class="f"><span>Equipamento</span><div class="in"><input id="cEquip" inputmode="decimal" data-def="" data-opt data-min="0" placeholder="0"><em>R$</em></div><div class="msg"></div></label>
+    <label class="f"><span>Instalação</span><div class="in"><input id="cInst" inputmode="decimal" data-def="" data-opt data-min="0" placeholder="0"><em>R$</em></div><div class="msg"></div></label>
+    <label class="f"><span>Outros custos</span><div class="in"><input id="cOutros" inputmode="decimal" data-def="" data-opt data-min="0" placeholder="0"><em>R$</em></div><div class="msg"></div></label>
+    <label class="f"><span>Parte solar no custo <i>(só exibição)</i></span><div class="in"><input id="cSolar" inputmode="decimal" data-def="" data-opt data-min="0" placeholder="—"><em>R$</em></div><div class="msg"></div></label>
+  </div>
+  <div class="kpis" id="custoKpis"></div>
+  <div class="alerts" id="custoAlerts"></div>
+</section>
+
+<!-- ========== 3. ECONOMIA ========== -->
+<section class="card">
+  <h2><span class="n">3</span>Economia do cliente</h2>
+  <div class="row">
+    <label class="lbl">Origem da recarga</label>
+    <div class="seg" data-state="recarga">
+      <button type="button" data-v="rede">Rede (fora-ponta)</button>
+      <button type="button" data-v="solar">Solar</button>
+    </div>
+  </div>
+  <div class="grid">
+    <label class="f" id="wrapRecSolar"><span>Custo da recarga solar</span><div class="in"><input id="custoRecSolar" inputmode="decimal" data-def="0" data-min="0"><em>R$/kWh</em></div><div class="msg"></div></label>
+    <label class="f"><span>Economia adicional da geração solar</span><div class="in"><input id="econSolar" inputmode="decimal" data-def="" data-opt data-min="0" placeholder="0"><em>R$/mês</em></div><div class="msg"></div></label>
+  </div>
+  <p class="note hide" id="noteSolar">Com recarga solar a R$ 0, o cálculo ignora o custo de oportunidade: a energia que carrega a bateria poderia ser injetada ou compensada na rede.</p>
+  <div class="kpis" id="econKpis"></div>
+  <div class="alerts" id="econAlerts"></div>
+</section>
+
+<!-- ========== 4. PREÇO E MARGEM ========== -->
+<section class="card">
+  <h2><span class="n">4</span>Preço e margem</h2>
+  <div class="row">
+    <label class="lbl">Critério de precificação</label>
+    <div class="seg" data-state="modo">
+      <button type="button" data-v="margem">Margem sobre o preço de venda</button>
+      <button type="button" data-v="markup">Markup sobre o custo</button>
+    </div>
+  </div>
+  <div class="grid">
+    <label class="f"><span>Impostos sobre a venda</span><div class="in"><input id="impostos" inputmode="decimal" data-def="0" data-min="0" data-lt="100"><em>%</em></div><div class="msg"></div></label>
+    <label class="f"><span>Comissão</span><div class="in"><input id="comissao" inputmode="decimal" data-def="0" data-min="0" data-lt="100"><em>%</em></div><div class="msg"></div></label>
+  </div>
+  <label class="check"><input type="checkbox" id="liq"><span>O percentual alvo é <b>líquido</b> (já descontados impostos e comissão)<small>Desmarcado: o percentual vale sobre o lucro bruto e os impostos e a comissão saem dele.</small></span></label>
+  <div class="mode" id="modeTxt"></div>
+
+  <div class="scens">
+    <div class="scen" id="sc1">
+      <div class="hd"><strong>Cenário 1</strong></div>
+      <label class="f"><span class="pl">Margem</span><div class="in"><input id="c1" inputmode="decimal" data-def="20" data-min="0"><em>%</em></div><div class="msg"></div></label>
+      <div class="eq" id="eq1"></div><div id="sb1"></div>
+    </div>
+    <div class="scen rec" id="sc2">
+      <div class="hd"><strong>Cenário 2</strong><span class="badge">Recomendado</span></div>
+      <label class="f"><span class="pl">Margem</span><div class="in"><input id="c2" inputmode="decimal" data-def="25" data-min="0"><em>%</em></div><div class="msg"></div></label>
+      <div class="eq" id="eq2"></div><div id="sb2"></div>
+    </div>
+    <div class="scen" id="sc3">
+      <div class="hd"><strong>Cenário 3</strong></div>
+      <label class="f"><span class="pl">Margem</span><div class="in"><input id="c3" inputmode="decimal" data-def="30" data-min="0"><em>%</em></div><div class="msg"></div></label>
+      <div class="eq" id="eq3"></div><div id="sb3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 5. PAYBACK E VIABILIDADE ========== -->
+<section class="card">
+  <h2><span class="n">5</span>Payback e viabilidade <span style="font-weight:400;color:var(--muted);font-size:13px">· 15 anos</span></h2>
+  <div class="row">
+    <label class="lbl">O&amp;M anual</label>
+    <div class="seg" data-state="om">
+      <button type="button" data-v="rs">R$/ano</button>
+      <button type="button" data-v="pct">% do preço ao cliente</button>
+    </div>
+  </div>
+  <div class="grid">
+    <label class="f"><span id="omLbl">O&amp;M</span><div class="in"><input id="omValor" inputmode="decimal" data-def="0" data-min="0"><em id="omUnit">R$/ano</em></div><div class="msg"></div></label>
+    <label class="f"><span>Taxa de desconto (VPL)</span><div class="in"><input id="taxa" inputmode="decimal" data-def="10" data-min="0" data-max="100"><em>% a.a.</em></div><div class="msg"></div></label>
+  </div>
+  <div class="tw" style="margin-top:14px"><table id="viabTbl"></table></div>
+  <p class="note">A energia entregue em cada ano é o menor valor entre a demanda diária e o que a bateria consegue entregar já degradada: capacidade × DoD × (1 − degradação)<sup>ano</sup>. Também respeita o limite de potência instalada × horas de ponta. As tarifas recebem o reajuste anual. O&amp;M constante em R$.</p>
+
+  <details id="cfDetails">
+    <summary>Fluxo de caixa ano a ano</summary>
+    <div class="body">
+      <select id="cfSel" aria-label="Cenário"></select>
+      <div class="tw"><table id="cfTbl"></table></div>
+    </div>
+  </details>
+</section>
+
+<!-- ========== 6. AUDITORIA ========== -->
+<section class="card">
+  <h2><span class="n">6</span>Auditoria</h2>
+  <details>
+    <summary>Premissas e fórmulas</summary>
+    <div class="body"><div class="audit" id="audit"></div></div>
+  </details>
+</section>
+
+<footer><b>Estimativa. Não substitui estudo de engenharia.</b></footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- utilitários de formato (pt-BR) ---------- */
+const $ = id => document.getElementById(id);
+const NF = {};
+const nf = d => NF[d] || (NF[d] = new Intl.NumberFormat('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d}));
+const CUR = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'});
+const CUR0 = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:0, maximumFractionDigits:0});
+const ok = x => typeof x === 'number' && isFinite(x);
+const fmt = (x, d=0) => ok(x) ? nf(d).format(x) : '—';
+const brl = x => ok(x) ? CUR.format(x) : '—';
+const brl0 = x => ok(x) ? CUR0.format(x) : '—';
+const pct = (x, d=1) => ok(x) ? nf(d).format(x*100) + '%' : '—';
+const anos = x => ok(x) ? nf(1).format(x) + ' anos' : '—';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Aceita "1.234,56", "1234,56", "2.50", "2,5", "1.500" (milhar) */
+function parseBR(s){
+  s = String(s).trim().replace(/\s|R\$|%/g, '');
+  if (!s) return null;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else {
+    const p = s.split('.');
+    if (p.length > 2 || (p.length === 2 && p[1].length === 3 && !/^-?0*$/.test(p[0]))) s = s.replace(/\./g, '');
+  }
+  if (!/^-?\d*\.?\d+$/.test(s) && !/^-?\d+\.?$/.test(s)) return NaN;
+  return Number(s);
+}
+
+/* ---------- estado ---------- */
+const STORE = 'calcBessMargem_v1';
+const DEF_STATE = {recarga:'rede', modo:'margem', om:'rs', liq:false};
+let state = Object.assign({}, DEF_STATE);
+const inputs = Array.from(document.querySelectorAll('input[data-def]'));
+
+function save(){
+  try {
+    const v = {}; inputs.forEach(el => v[el.id] = el.value);
+    state.liq = $('liq').checked;
+    localStorage.setItem(STORE, JSON.stringify({v, s:state}));
+  } catch(e){}
+}
+function load(){
+  inputs.forEach(el => el.value = el.dataset.def);
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (d && d.v) {
+      inputs.forEach(el => { if (typeof d.v[el.id] === 'string') el.value = d.v[el.id]; });
+      state = Object.assign({}, DEF_STATE, d.s || {});
+    }
+  } catch(e){}
+  $('liq').checked = !!state.liq;
+}
+
+/* ---------- validação ---------- */
+function mark(el, m){
+  el.classList.toggle('bad', !!m);
+  el.setAttribute('aria-invalid', m ? 'true' : 'false');
+  const me = el.closest('.f').querySelector('.msg');
+  if (me) me.textContent = m || '';
+}
+const lim = x => fmt(x, Number.isInteger(x) ? 0 : 2);
+function field(id){
+  const el = $(id), d = el.dataset, raw = parseBR(el.value);
+  let m = '';
+  if (raw === null) { if (!('opt' in d)) m = 'Obrigatório'; }
+  else if (Number.isNaN(raw)) m = 'Número inválido';
+  else if (d.min !== undefined && raw < +d.min) m = 'Mínimo ' + lim(+d.min);
+  else if (d.max !== undefined && raw > +d.max) m = 'Máximo ' + lim(+d.max);
+  else if (d.lt !== undefined && raw >= +d.lt) m = 'Deve ser menor que ' + lim(+d.lt);
+  else if ('pos' in d && raw <= 0) m = 'Deve ser maior que zero';
+  else if ('int' in d && !Number.isInteger(raw)) m = 'Use número inteiro';
+  mark(el, m);
+  return m ? NaN : raw;
+}
+
+/* ---------- TIR por bisseção ---------- */
+function irr(c){
+  const npv = r => c.reduce((s, v, i) => s + v / Math.pow(1 + r, i), 0);
+  let lo = -0.99, hi = 10, fl = npv(lo), fh = npv(hi);
+  if (!ok(fl) || !ok(fh) || fl * fh > 0) return NaN;
+  for (let k = 0; k < 300; k++) {
+    const m = (lo + hi) / 2, fm = npv(m);
+    if (Math.abs(fm) < 1e-6) return m;
+    if (fl * fm < 0) { hi = m; fh = fm; } else { lo = m; fl = fm; }
+  }
+  return (lo + hi) / 2;
+}
+
+/* ---------- cálculo principal ---------- */
+const HORIZ = 15;
+let last = null;
+
+function calc(){
+  /* entradas */
+  const E = field('eDia'), H = field('hPonta'), D = field('dias');
+  const TP = field('tPonta'), TF = field('tFora'), R = field('reaj') / 100;
+  const EF = field('efic') / 100, DOD = field('dod') / 100, DG = field('degr') / 100, FP = field('fp');
+  const FOLGA = field('folga') / 100, ANO = field('anoProj');
+  const CAPI = field('capInst'), POTI = field('potInst');
+  const CEq = field('cEquip') ?? 0, CIn = field('cInst') ?? 0, COu = field('cOutros') ?? 0, CSol = field('cSolar');
+  const CRS = field('custoRecSolar'), SOL = field('econSolar') ?? 0;
+  const IMP = field('impostos') / 100, COM = field('comissao') / 100;
+  const OM = field('omValor'), TX = field('taxa') / 100;
+  const cen = ['c1','c2','c3'].map(id => field(id) / 100);
+  const liq = $('liq').checked;
+  const isMargem = state.modo === 'margem';
+  const rede = state.recarga === 'rede';
+  const hasCap = ok(CAPI) && CAPI > 0, hasPot = ok(POTI) && POTI > 0;
+
+  if (IMP + COM >= 1) { mark($('impostos'), 'Impostos + comissão devem ser < 100%'); mark($('comissao'), 'Impostos + comissão devem ser < 100%'); }
+  const impOk = ok(IMP) && ok(COM) && IMP + COM < 1;
+
+  /* 1. dimensionamento */
+  const fDeg = Math.pow(1 - DG, ANO);
+  const capMin = E / (DOD * fDeg);
+  const potBase = E / H;
+  const potMin = potBase * (1 + FOLGA);
+  const kva = potMin / FP;
+  const uCap = hasCap ? capMin / CAPI : NaN;
+  const uPot = hasPot ? potMin / POTI : NaN;
+
+  /* 2. custos */
+  const INV = CEq + CIn + COu;
+  const invOk = ok(INV) && INV > 0;
+
+  /* 3. economia (mês típico, ano 1, sem degradação) */
+  const tRec = rede ? TF : CRS;
+  const desc = E * D;
+  const carga = desc / EF;
+  const recPonta = desc * TP;
+  const custoRec = carga * tRec;
+  const econBess = recPonta - custoRec;
+  const econMes = econBess + SOL;
+  const econAno = econMes * 12;
+
+  /* 5. fluxo de caixa do cliente */
+  const capBase = hasCap ? CAPI : capMin;
+  function fluxo(price){
+    const rows = [], cfs = [-price];
+    let acc = -price, pb = NaN, tot = 0;
+    for (let n = 1; n <= HORIZ; n++) {
+      const f = Math.pow(1 + R, n - 1);
+      const soh = Math.pow(1 - DG, n);
+      let disp = capBase * DOD * soh;
+      if (hasPot) disp = Math.min(disp, POTI * H);
+      const eDia = Math.min(E, disp);
+      const eAno = eDia * D * 12, cAno = eAno / EF;
+      const tp = TP * f, tr = tRec * f;
+      const econ = eAno * tp - cAno * tr + SOL * 12 * f;
+      const om = state.om === 'rs' ? OM : OM / 100 * price;
+      const cf = econ - om;
+      const prev = acc; acc += cf; tot += cf; cfs.push(cf);
+      if (!ok(pb) && prev < 0 && acc >= 0 && cf > 0) pb = (n - 1) + (-prev) / cf;
+      rows.push({n, soh, eDia, eAno, tp, tr, econ, om, cf, acc});
+    }
+    const vpl = cfs.reduce((s, c, i) => s + c / Math.pow(1 + TX, i), 0);
+    return {rows, pb, vpl, tir: irr(cfs), tot, cfs};
+  }
+
+  /* 4. cenários */
+  const scen = cen.map((s, i) => {
+    const el = $('c' + (i + 1));
+    const o = {s, price:NaN, err:''};
+    if (!ok(s) || !invOk || !impOk) return o;
+    if (isMargem) {
+      const den = liq ? 1 - s - IMP - COM : 1 - s;
+      if (den <= 0) o.err = liq ? 'Margem + impostos + comissão deve ser < 100%' : 'Margem deve ser < 100%';
+      else { o.den = den; o.price = INV / den; }
+    } else {
+      const den = liq ? 1 - IMP - COM : 1;
+      o.den = den; o.price = INV * (1 + s) / den;
+    }
+    if (o.err) { mark(el, o.err); return o; }
+    o.imp = o.price * IMP; o.com = o.price * COM;
+    o.lucroB = o.price - INV; o.mB = o.lucroB / o.price; o.mkB = o.lucroB / INV;
+    o.lucroL = o.lucroB - o.imp - o.com; o.mL = o.lucroL / o.price; o.mkL = o.lucroL / INV;
+    o.pbS = econAno > 0 ? o.price / econAno : NaN;
+    o.fx = fluxo(o.price);
+    return o;
+  });
+
+  last = {E,H,D,TP,TF,R,EF,DOD,DG,FP,FOLGA,ANO,CAPI,POTI,hasCap,hasPot,CEq,CIn,COu,CSol,INV,invOk,CRS,SOL,IMP,COM,OM,TX,cen,liq,isMargem,rede,
+          fDeg,capMin,potBase,potMin,kva,uCap,uPot,tRec,desc,carga,recPonta,custoRec,econBess,econMes,econAno,capBase,scen};
+  render(last);
+  save();
+}
+
+/* ---------- renderização ---------- */
+function kpi(label, val, sub, hl){
+  return `<div class="kpi${hl ? ' hl' : ''}"><span>${label}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+}
+function alertsHtml(a){ return a.map(([t, m]) => `<div class="alert ${t}">${m}</div>`).join(''); }
+
+function render(c){
+  const dimOk = ok(c.capMin) && ok(c.potMin);
+  const scLbl = c.isMargem ? 'Margem' : 'Markup';
+  const REC = 1;
+
+  /* barra fixa */
+  $('stk1').innerHTML = dimOk ? `Preciso de <b>${fmt(c.capMin,1)} kWh</b> e <b>${fmt(c.potMin,1)} kW</b>` : 'Preencha os dados do cliente';
+  const r = c.scen[REC];
+  $('stk2').innerHTML = ok(r.price)
+    ? `Recomendado (${scLbl.toLowerCase()} ${fmt(r.s*100,1)}%): <b>${brl0(r.price)}</b> · payback <b>${anos(r.fx.pb)}</b>`
+    : (c.invOk ? 'Corrija os campos destacados' : 'Digite os custos no bloco 2 para ver preço e payback');
+
+  /* bloco 1 */
+  $('heroTxt').innerHTML = dimOk ? `Preciso de <b>${fmt(c.capMin,1)} kWh</b> e <b>${fmt(c.potMin,1)} kW</b>` : '—';
+  $('heroSub').textContent = dimOk
+    ? `Potência sem folga: ${fmt(c.potBase,1)} kW · aparente: ${fmt(c.kva,1)} kVA (FP ${fmt(c.FP,2)}) · capacidade útil no ano ${fmt(c.ANO,0)}: ${fmt(c.E,1)} kWh`
+    : '';
+  let uk = '';
+  if (c.hasCap) uk += kpi('Utilização da capacidade', pct(c.uCap), `${fmt(c.capMin,1)} ÷ ${fmt(c.CAPI,1)} kWh`, c.uCap >= .7 && c.uCap <= 1);
+  if (c.hasPot) uk += kpi('Utilização da potência', pct(c.uPot), `${fmt(c.potMin,1)} ÷ ${fmt(c.POTI,1)} kW`, c.uPot >= .7 && c.uPot <= 1);
+  if (c.hasCap) uk += kpi('Autonomia na potência mín.', fmt(c.CAPI * c.DOD / c.potBase, 2) + ' h', 'cap. útil ÷ potência sem folga');
+  $('utilKpis').innerHTML = uk;
+  $('utilKpis').classList.toggle('hide', !uk);
+  const da = [];
+  if (dimOk && c.hasCap) {
+    if (c.uCap > 1) da.push(['danger', `Capacidade instalada (${fmt(c.CAPI,1)} kWh) menor que a mínima (${fmt(c.capMin,1)} kWh). O sistema não entrega os ${fmt(c.E,0)} kWh/dia no ano de projeto.`]);
+    else if (c.uCap < .7) da.push(['warn', `Utilização da capacidade em ${pct(c.uCap)}, abaixo de 70%: sistema sobredimensionado em energia.`]);
+    else da.push(['ok', `Capacidade adequada: utilização de ${pct(c.uCap)}.`]);
+  }
+  if (dimOk && c.hasPot) {
+    if (c.POTI < c.potBase) da.push(['danger', `Potência instalada (${fmt(c.POTI,1)} kW) menor que a necessária sem folga (${fmt(c.potBase,1)} kW). Não descarrega a energia dentro da ponta.`]);
+    else if (c.POTI < c.potMin) da.push(['danger', `Potência instalada (${fmt(c.POTI,1)} kW) menor que a mínima com folga (${fmt(c.potMin,1)} kW).`]);
+    else if (c.uPot < .7) da.push(['warn', `Utilização da potência em ${pct(c.uPot)}, abaixo de 70%: sistema sobredimensionado em potência.`]);
+    else da.push(['ok', `Potência adequada: utilização de ${pct(c.uPot)}.`]);
+  }
+  $('dimAlerts').innerHTML = alertsHtml(da);
+
+  /* bloco 2 */
+  let ck = kpi('Equipamento', brl(c.CEq)) + kpi('Instalação', brl(c.CIn)) + kpi('Outros', brl(c.COu)) + kpi('Investimento total', brl(c.INV), null, true);
+  if (ok(c.CSol) && c.CSol > 0 && c.invOk) {
+    ck += kpi('Parte solar (exibição)', brl(c.CSol), pct(c.CSol / c.INV) + ' do total');
+    ck += kpi('Parte BESS', brl(c.INV - c.CSol), pct((c.INV - c.CSol) / c.INV) + ' do total');
+    if (dimOk && c.INV > c.CSol) ck += kpi('BESS por kWh', brl0((c.INV - c.CSol) / (c.hasCap ? c.CAPI : c.capMin)) + '/kWh', c.hasCap ? 'sobre a capacidade instalada' : 'sobre a capacidade mínima');
+  } else if (c.invOk && dimOk) {
+    ck += kpi('Custo por kWh', brl0(c.INV / (c.hasCap ? c.CAPI : c.capMin)) + '/kWh', c.hasCap ? 'sobre a capacidade instalada' : 'sobre a capacidade mínima');
+  }
+  $('custoKpis').innerHTML = ck;
+  const ca = [];
+  if (!c.invOk) ca.push(['info', 'Digite ao menos um custo para calcular preço, margem e payback.']);
+  if (ok(c.CSol) && c.invOk && c.CSol > c.INV) ca.push(['warn', 'A parte solar informada é maior que o investimento total.']);
+  $('custoAlerts').innerHTML = alertsHtml(ca);
+
+  /* bloco 3 */
+  $('wrapRecSolar').classList.toggle('hide', c.rede);
+  $('noteSolar').classList.toggle('hide', c.rede || !(c.CRS === 0));
+  let ek = kpi('Descarregada na ponta', fmt(c.desc,0) + ' kWh/mês', `${fmt(c.E,0)} kWh × ${fmt(c.D,0)} dias`)
+         + kpi('Carregada ' + (c.rede ? 'fora-ponta' : 'solar'), fmt(c.carga,0) + ' kWh/mês', `÷ eficiência ${pct(c.EF)}`)
+         + kpi('Economia mensal', brl(c.econMes), c.SOL > 0 ? `BESS ${brl(c.econBess)} + solar ${brl(c.SOL)}` : 'ano 1', true)
+         + kpi('Economia anual', brl(c.econAno), 'ano 1, sem reajuste', true);
+  $('econKpis').innerHTML = ek;
+  const ea = [];
+  if (ok(c.econBess) && c.econBess <= 0) ea.push(['danger', `A diferença de tarifa não cobre a perda da recarga: ponta ${brl(c.TP)} ≤ recarga ${brl(c.tRec)} ÷ ${pct(c.EF)} = ${brl(c.tRec / c.EF)}/kWh. O BESS não gera economia.`]);
+  $('econAlerts').innerHTML = alertsHtml(ea);
+
+  /* bloco 4 */
+  const f = c.isMargem
+    ? (c.liq ? 'preço = investimento ÷ (1 − margem − impostos − comissão)' : 'preço = investimento ÷ (1 − margem)')
+    : (c.liq ? 'preço = investimento × (1 + markup) ÷ (1 − impostos − comissão)' : 'preço = investimento × (1 + markup)');
+  $('modeTxt').innerHTML = `Ativo: <b>${c.isMargem ? 'Margem sobre o preço de venda' : 'Markup sobre o custo'}</b>${c.liq ? ' (alvo líquido)' : ' (alvo bruto)'}<br><code>${f}</code>`;
+  document.querySelectorAll('.scen .pl').forEach(s => s.textContent = c.liq ? (c.isMargem ? 'Margem líquida' : 'Markup líquido') : scLbl);
+  c.scen.forEach((o, i) => {
+    const k = i + 1;
+    if (!ok(o.price)) {
+      $('eq' + k).textContent = ok(o.s) && !o.err && c.isMargem && o.s < 1 ? `≡ markup ${pct(o.s / (1 - o.s))}` : (ok(o.s) && !c.isMargem ? `≡ margem ${pct(o.s / (1 + o.s))}` : '');
+      $('sb' + k).innerHTML = `<div class="price"><small>Preço ao cliente</small><div class="big">—</div></div>`;
+      return;
+    }
+    $('eq' + k).innerHTML = c.isMargem
+      ? `≡ markup ${pct(c.liq ? o.mkL : o.mkB)}${c.liq ? ` · margem bruta ${pct(o.mB)}` : ''}`
+      : `≡ margem ${pct(c.liq ? o.mL : o.mB)}${c.liq ? ` · markup bruto ${pct(o.mkB)}` : ''}`;
+    $('sb' + k).innerHTML = `
+      <div class="price"><small>Preço ao cliente</small><div class="big">${brl0(o.price)}</div></div>
+      <dl class="kv">
+        <div><dt>Investimento</dt><dd>${brl0(c.INV)}</dd></div>
+        <div><dt>Lucro bruto</dt><dd>${brl0(o.lucroB)} · ${pct(o.mB)}</dd></div>
+        <div><dt>Impostos (${pct(c.IMP)})</dt><dd>${brl0(-o.imp)}</dd></div>
+        <div><dt>Comissão (${pct(c.COM)})</dt><dd>${brl0(-o.com)}</dd></div>
+        <div><dt><b>Lucro líquido</b></dt><dd class="${o.lucroL >= 0 ? 'pos' : 'neg'}"><b>${brl0(o.lucroL)} · ${pct(o.mL)}</b></dd></div>
+        <div class="sep"></div>
+        <div><dt>Payback do cliente</dt><dd>${anos(o.pbS)}</dd></div>
+      </dl>`;
+  });
+
+  /* bloco 5 */
+  $('omUnit').textContent = state.om === 'rs' ? 'R$/ano' : '% a.a.';
+  const th = c.scen.map((o, i) => `<th class="${i === REC ? 'rec' : ''}">${scLbl} ${ok(o.s) ? fmt(o.s*100,1) + '%' : '—'}${i === REC ? ' ★' : ''}</th>`).join('');
+  const line = (lbl, fn) => `<tr><td>${lbl}</td>${c.scen.map((o, i) => `<td class="${i === REC ? 'rec' : ''}">${ok(o.price) ? fn(o) : '—'}</td>`).join('')}</tr>`;
+  $('viabTbl').innerHTML = `<thead><tr><th></th>${th}</tr></thead><tbody>
+    ${line('Preço ao cliente', o => brl0(o.price))}
+    ${line('Economia ano 1', o => brl0(o.fx.rows[0].econ))}
+    ${line('Payback simples', o => anos(o.pbS))}
+    ${line('Payback (fluxo de caixa)', o => ok(o.fx.pb) ? anos(o.fx.pb) : '> 15 anos')}
+    ${line('TIR 15 anos', o => pct(o.fx.tir))}
+    ${line(`VPL @ ${fmt(c.TX*100,1)}%`, o => `<span class="${o.fx.vpl >= 0 ? 'pos' : 'neg'}">${brl0(o.fx.vpl)}</span>`)}
+    ${line('Fluxo líquido 15 anos', o => brl0(o.fx.tot - o.price))}
+  </tbody>`;
+
+  /* fluxo de caixa */
+  const sel = $('cfSel'), prev = sel.value;
+  sel.innerHTML = c.scen.map((o, i) => `<option value="${i}">Cenário ${i+1} · ${scLbl} ${ok(o.s) ? fmt(o.s*100,1) + '%' : '—'}${i === REC ? ' (recomendado)' : ''}</option>`).join('');
+  sel.value = prev !== '' && prev !== null ? prev : String(REC);
+  if (sel.selectedIndex < 0) sel.value = String(REC);
+  const o = c.scen[+sel.value];
+  if (o && ok(o.price)) {
+    const pbYear = ok(o.fx.pb) ? Math.ceil(o.fx.pb) : -1;
+    $('cfTbl').innerHTML = `<thead><tr><th>Ano</th><th>Saúde bat.</th><th>Energia (MWh)</th><th>Tarifa ponta</th><th>Economia</th><th>O&amp;M</th><th>Fluxo</th><th>Acumulado</th></tr></thead><tbody>
+      <tr><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="neg">${brl0(-o.price)}</td><td class="neg">${brl0(-o.price)}</td></tr>
+      ${o.fx.rows.map(r => `<tr class="${r.n === pbYear ? 'pb' : ''}"><td>${r.n}${r.n === pbYear ? ' ✓' : ''}</td><td>${pct(r.soh)}</td><td>${fmt(r.eAno/1000,1)}</td><td>${fmt(r.tp,3)}</td><td>${brl0(r.econ)}</td><td>${brl0(-r.om)}</td><td>${brl0(r.cf)}</td><td class="${r.acc >= 0 ? 'pos' : 'neg'}">${brl0(r.acc)}</td></tr>`).join('')}
+    </tbody>`;
+  } else {
+    $('cfTbl').innerHTML = `<tbody><tr><td style="text-align:left;white-space:normal;color:var(--muted)">Sem dados: preencha os custos e um percentual válido.</td></tr></tbody>`;
+  }
+
+  renderAudit(c);
+}
+
+/* ---------- auditoria ---------- */
+function renderAudit(c){
+  const out = [];
+  const H4 = t => out.push(`<h4>${esc(t)}</h4>`);
+  const A = (t, expr, res) => out.push(`<div class="al"><div class="t">${esc(t)}</div><code>${esc(expr)} = <b>${esc(res)}</b></code></div>`);
+  const T = (t, txt) => out.push(`<div class="al"><div class="t">${esc(t)}</div><code>${esc(txt)}</code></div>`);
+  const p = x => pct(x, 1);
+  const n2 = x => fmt(x, 2), n1 = x => fmt(x, 1), n0 = x => fmt(x, 0);
+
+  H4('Premissas');
+  T('Cliente', `Energia ${n1(c.E)} kWh/dia · ponta ${n1(c.H)} h · ${n0(c.D)} dias/mês · tarifa ponta ${brl(c.TP)}/kWh · fora-ponta ${brl(c.TF)}/kWh · reajuste ${p(c.R)} a.a.`);
+  T('Técnicas', `Eficiência RT ${p(c.EF)} · DoD ${p(c.DOD)} · degradação ${p(c.DG)} a.a. · FP ${n2(c.FP)} · folga ${p(c.FOLGA)} · ano de projeto ${n0(c.ANO)}`);
+
+  H4('1 · Dimensionamento');
+  A('Capacidade nominal mínima (sem eficiência, para não contar duas vezes)',
+    `${n1(c.E)} ÷ (${p(c.DOD)} × (1 − ${p(c.DG)})^${n0(c.ANO)}) = ${n1(c.E)} ÷ ${fmt(c.DOD * c.fDeg, 4)}`, n1(c.capMin) + ' kWh');
+  A('Potência sem folga', `${n1(c.E)} ÷ ${n1(c.H)}`, n1(c.potBase) + ' kW');
+  A('Potência mínima com folga', `${n1(c.potBase)} × (1 + ${p(c.FOLGA)})`, n1(c.potMin) + ' kW');
+  A('Potência aparente', `${n1(c.potMin)} ÷ ${n2(c.FP)}`, n1(c.kva) + ' kVA');
+  if (c.hasCap) A('Utilização da capacidade', `${n1(c.capMin)} ÷ ${n1(c.CAPI)}`, p(c.uCap));
+  if (c.hasPot) A('Utilização da potência', `${n1(c.potMin)} ÷ ${n1(c.POTI)}`, p(c.uPot));
+
+  H4('2 · Custos');
+  A('Investimento total', `${brl(c.CEq)} + ${brl(c.CIn)} + ${brl(c.COu)}`, brl(c.INV));
+
+  H4('3 · Economia (ano 1)');
+  A('Energia descarregada na ponta', `${n1(c.E)} × ${n0(c.D)}`, n0(c.desc) + ' kWh/mês');
+  A('Energia carregada ' + (c.rede ? 'fora-ponta' : 'solar'), `${n0(c.desc)} ÷ ${p(c.EF)}`, n0(c.carga) + ' kWh/mês');
+  A('Valor evitado na ponta', `${n0(c.desc)} × ${brl(c.TP)}`, brl(c.recPonta));
+  A('Custo da recarga (' + (c.rede ? 'tarifa fora-ponta' : 'custo solar') + ')', `${n0(c.carga)} × ${brl(c.tRec)}`, brl(c.custoRec));
+  A('Economia mensal do BESS', `${brl(c.recPonta)} − ${brl(c.custoRec)}`, brl(c.econBess));
+  if (c.SOL > 0) A('Economia mensal total (com solar)', `${brl(c.econBess)} + ${brl(c.SOL)}`, brl(c.econMes));
+  A('Economia anual', `${brl(c.econMes)} × 12`, brl(c.econAno));
+
+  H4('4 · Preço e margem');
+  c.scen.forEach((o, i) => {
+    if (!ok(o.price)) { T(`Cenário ${i+1}`, o.err || 'sem dados'); return; }
+    const s = p(o.s);
+    let expr;
+    if (c.isMargem) expr = c.liq ? `${brl(c.INV)} ÷ (1 − ${s} − ${p(c.IMP)} − ${p(c.COM)})` : `${brl(c.INV)} ÷ (1 − ${s})`;
+    else expr = c.liq ? `${brl(c.INV)} × (1 + ${s}) ÷ (1 − ${p(c.IMP)} − ${p(c.COM)})` : `${brl(c.INV)} × (1 + ${s})`;
+    A(`Cenário ${i+1} · preço ao cliente`, expr, brl(o.price));
+    A(`Cenário ${i+1} · lucro bruto`, `${brl(o.price)} − ${brl(c.INV)}`, `${brl(o.lucroB)} (${p(o.mB)} do preço; markup ${p(o.mkB)})`);
+    A(`Cenário ${i+1} · impostos + comissão`, `${brl(o.price)} × (${p(c.IMP)} + ${p(c.COM)})`, brl(o.imp + o.com));
+    A(`Cenário ${i+1} · lucro líquido`, `${brl(o.lucroB)} − ${brl(o.imp + o.com)}`, `${brl(o.lucroL)} (${p(o.mL)} do preço)`);
+    A(`Cenário ${i+1} · payback simples`, `${brl(o.price)} ÷ ${brl(c.econAno)}`, anos(o.pbS));
+  });
+  T('Equivalência margem ↔ markup', 'markup = margem ÷ (1 − margem)  ·  margem = markup ÷ (1 + markup)');
+
+  H4('5 · Fluxo de caixa (15 anos)');
+  T('Energia entregue no ano n', `min(${n1(c.E)}, ${n1(c.capBase)} kWh${c.hasCap ? ' (instalada)' : ' (mínima)'} × ${p(c.DOD)} × (1 − ${p(c.DG)})^n${c.hasPot ? ` ; ${n1(c.POTI)} kW × ${n1(c.H)} h` : ''}) × ${n0(c.D)} dias × 12`);
+  T('Economia no ano n', `energia × ponta × (1 + ${p(c.R)})^(n−1) − energia ÷ ${p(c.EF)} × ${brl(c.tRec)} × (1 + ${p(c.R)})^(n−1)` + (c.SOL > 0 ? ` + ${brl(c.SOL)} × 12 × (1 + ${p(c.R)})^(n−1)` : ''));
+  T('O&M no ano n', state.om === 'rs' ? `${brl(c.OM)} por ano (constante)` : `${p(c.OM / 100)} × preço ao cliente (constante)`);
+  T('Payback (fluxo)', 'ano anterior + saldo acumulado negativo ÷ fluxo do ano em que o acumulado vira positivo');
+  T('VPL', `Σ fluxo_n ÷ (1 + ${p(c.TX)})^n, n = 0…15 (ano 0 = −preço)`);
+  T('TIR', 'taxa em que VPL = 0 (bisseção)');
+  const r = c.scen[1];
+  if (ok(r.price)) {
+    const y1 = r.fx.rows[0];
+    A('Recomendado · ano 1: energia', `min(${n1(c.E)}, ${n1(c.capBase)} × ${p(c.DOD)} × ${fmt(y1.soh, 4)}) × ${n0(c.D)} × 12`, n0(y1.eAno) + ' kWh');
+    A('Recomendado · ano 1: fluxo', `${brl(y1.econ)} − ${brl(y1.om)}`, brl(y1.cf));
+  }
+
+  $('audit').innerHTML = out.join('');
+}
+
+/* ---------- controles ---------- */
+function syncSegs(){
+  document.querySelectorAll('.seg[data-state]').forEach(g => {
+    const k = g.dataset.state;
+    g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === state[k])));
+  });
+}
+document.querySelectorAll('.seg[data-state]').forEach(g => {
+  g.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    state[g.dataset.state] = b.dataset.v; syncSegs(); calc();
+  });
+});
+document.addEventListener('input', e => { if (e.target.matches('input')) calc(); });
+$('liq').addEventListener('change', calc);
+$('cfSel').addEventListener('change', () => last && render(last));
+$('btnReset').addEventListener('click', () => {
+  if (!confirm('Restaurar todos os valores padrão? Os dados digitados serão perdidos.')) return;
+  try { localStorage.removeItem(STORE); } catch(e){}
+  state = Object.assign({}, DEF_STATE);
+  load(); syncSegs(); calc();
+});
+
+load(); syncSegs(); calc();
+})();
+</script>
+</body>
+</html>
